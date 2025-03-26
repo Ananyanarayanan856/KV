@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background-image: url('images/w.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .main-container {
+            width: 90%;
+            max-width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            position: relative;
+        }
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-button {
+            background: #3107eb;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .mode-button.active {
+            background: #130458;
+            color: white;
+        }
+        .number-box {
+            width: 200px;
+            height: 200px;
+            border-radius: 20px;
+            margin: 10px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .number-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .quiz-message {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .controls button {
+            background: #3107eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .controls button:hover {
+            background: #130458;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Number Voice Assistant</h1>
+        <div class="mode-toggle">
+            <button id="learnMode" class="mode-button active">Learn Mode</button>
+            <button id="quizMode" class="mode-button">Quiz Mode</button>
+        </div>
+        <div id="numberBox" class="number-box"></div>
+        <div id="numberName" class="number-name">One</div>
+        <div class="quiz-message" id="quizMessage"></div>
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="speakBtn">Speak</button>
+            <button id="listenBtn">Listen</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    <script>
+        const numbers = [
+            { name: 'Zero', image: 'images/zero.jpg' },
+            { name: 'One', image: 'images/one.jpg' },
+            { name: 'Two', image: 'images/two.jpg' },
+            { name: 'Three', image: 'images/three.jpg' },
+            { name: 'Four', image: 'images/four.png' },
+            { name: 'Five', image: 'images/five.jpg' },
+            { name: 'Six', image: 'images/six.jpg' },
+            { name: 'Seven', image: 'images/seven.jpg' },
+            { name: 'Eight', image: 'images/eight.jpg' },
+            { name: 'Nine', image: 'images/nine.jpg' },
+            { name: 'Ten', image: 'images/ten.png' }
+        ];
+        let currentIndex = 0;
+        let isQuizMode = false;
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        function updateDisplay() {
+            document.getElementById('numberBox').style.backgroundImage = `url(${numbers[currentIndex].image})`;
+            document.getElementById('numberName').textContent = isQuizMode ? "???" : numbers[currentIndex].name;
+            document.getElementById('quizMessage').textContent = isQuizMode ? "Say the number's name!" : "";
+        }
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+        
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + numbers.length) % numbers.length;
+            updateDisplay();
+            if (!isQuizMode) speak(`This is ${numbers[currentIndex].name}`);
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % numbers.length;
+            updateDisplay();
+            if (!isQuizMode) speak(`This is ${numbers[currentIndex].name}`);
+        });
+        
+        document.getElementById('speakBtn').addEventListener('click', () => {
+            if (!isQuizMode) speak(`This is ${numbers[currentIndex].name}`);
+        });
+        
+        document.getElementById('listenBtn').addEventListener('click', () => {
+            recognition.start();
+        });
+        
+        recognition.onresult = (event) => {
+            let command = event.results[0][0].transcript.toLowerCase();
+            if (command.includes("next")) {
+                document.getElementById('nextBtn').click();
+            } else if (command.includes("previous")) {
+                document.getElementById('prevBtn').click();
+            } else if (isQuizMode) {
+                if (command.includes(numbers[currentIndex].name.toLowerCase())) {
+                    document.getElementById('quizMessage').textContent = "🎉 Correct!";
+                    speak(`Correct! This is ${numbers[currentIndex].name}`);
+                } else {
+                    document.getElementById('quizMessage').textContent = "❌ Try again! The correct answer is " + numbers[currentIndex].name;
+                    speak(`Wrong answer! The correct answer is ${numbers[currentIndex].name}`);
+                }
+            }
+        };
+        
+        document.getElementById('learnMode').addEventListener('click', () => {
+            isQuizMode = false;
+            updateDisplay();
+            document.getElementById('learnMode').classList.add('active');
+            document.getElementById('quizMode').classList.remove('active');
+        });
+        
+        document.getElementById('quizMode').addEventListener('click', () => {
+            isQuizMode = true;
+            updateDisplay();
+            document.getElementById('quizMode').classList.add('active');
+            document.getElementById('learnMode').classList.remove('active');
+        });
+        
+        updateDisplay();
+    </script>
+</body>
+</html>

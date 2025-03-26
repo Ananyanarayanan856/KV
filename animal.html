@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            /* background: rgba(5, 42, 5, 0.6); */
+            background-image: url('images/o.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .main-container {
+             width: 90%;
+            max-width: 500px;
+            height: 500px; /* Set the desired height */
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+}
+
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-button {
+            background: #3107eb;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .mode-button.active {
+            background: #130458;
+            color: white;
+        }
+        .animal-box {
+            width: 200px; /* Set square size */
+            height: 200px; /* Same as width */
+            border-radius: 20px;
+            margin: 10px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+}
+
+        .animal-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .quiz-message {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .controls button {
+            background: #3107eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .controls button:hover {
+            background: #130458;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Animal Voice Assistant</h1>
+        <div class="mode-toggle">
+            <button id="learnMode" class="mode-button active">Learn Mode</button>
+            <button id="quizMode" class="mode-button">Quiz Mode</button>
+        </div>
+        <div id="animalBox" class="animal-box"></div>
+        <div id="animalName" class="animal-name">Lion</div>
+        <div class="quiz-message" id="quizMessage"></div>
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="speakBtn">Speak</button>
+            <button id="listenBtn">Listen</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const animals = [
+            { name: 'Lion', image: 'images/lion.jpeg' },
+            { name: 'Elephant', image: 'images/Elephant.jpg' },
+            { name: 'Tiger', image: 'images/Tiger.jpg' },
+            { name: 'Horse', image: 'images/horse.jpg' },
+            { name: 'Monkey', image: 'images/monkey.webp' },
+            { name: 'Sheep', image: 'images/sheep.jpeg' },
+            { name: 'Cow', image: 'images/cow.jpeg' },
+            { name: 'Crocodile', image: 'images/crocile.avif' }
+        ];
+        let currentIndex = 0;
+        let isQuizMode = false;
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        function updateDisplay() {
+            document.getElementById('animalBox').style.backgroundImage = `url(${animals[currentIndex].image})`;
+            document.getElementById('animalName').textContent = isQuizMode ? "???" : animals[currentIndex].name;
+            document.getElementById('quizMessage').textContent = isQuizMode ? "Say the animal's name!" : "";
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', goToPrevious);
+        document.getElementById('nextBtn').addEventListener('click', goToNext);
+
+        function goToPrevious() {
+            currentIndex = (currentIndex - 1 + animals.length) % animals.length;
+            updateDisplay();
+            if (!isQuizMode) {
+                speak(`This is a ${animals[currentIndex].name}`);
+            }
+        }
+
+        function goToNext() {
+            currentIndex = (currentIndex + 1) % animals.length;
+            updateDisplay();
+            if (!isQuizMode) {
+                speak(`This is a ${animals[currentIndex].name}`);
+            }
+        }
+
+        document.getElementById('speakBtn').addEventListener('click', () => {
+            if (!isQuizMode) {
+                speak(`This is a ${animals[currentIndex].name}`);
+            }
+        });
+
+        document.getElementById('listenBtn').addEventListener('click', () => {
+            recognition.start();
+        });
+
+        recognition.onresult = (event) => {
+            let command = event.results[0][0].transcript.toLowerCase();
+            if (command.includes("next")) {
+                goToNext();
+            } else if (command.includes("previous")) {
+                goToPrevious();
+            } else if (isQuizMode) {
+                if (command.includes(animals[currentIndex].name.toLowerCase())) {
+                    document.getElementById('quizMessage').textContent = "🎉 Correct!";
+                    speak(`Correct! This is a ${animals[currentIndex].name}`);
+                } else {
+                    document.getElementById('quizMessage').textContent = "❌ Try again! The correct answer is " + animals[currentIndex].name;
+                    speak(`Wrong answer! The correct answer is ${animals[currentIndex].name}`);
+                }
+            }
+        };
+
+        document.getElementById('learnMode').addEventListener('click', () => {
+            isQuizMode = false;
+            updateDisplay();
+            document.getElementById('learnMode').classList.add('active');
+            document.getElementById('quizMode').classList.remove('active');
+        });
+
+        document.getElementById('quizMode').addEventListener('click', () => {
+            isQuizMode = true;
+            updateDisplay();
+            document.getElementById('quizMode').classList.add('active');
+            document.getElementById('learnMode').classList.remove('active');
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>

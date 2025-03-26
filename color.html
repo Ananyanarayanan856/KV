@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            /* background: rgba(5, 42, 5, 0.6); */
+            background-image: url('images/tr.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .main-container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(231, 224, 224, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .mode-button {
+            background: white;
+            color: rgb(10, 52, 4);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .mode-button.active {
+            background: rgb(2, 45, 7);
+            color: white;
+        }
+        .color-box {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            border-radius: 15px;
+            margin: 10px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .color-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .quiz-message {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .controls button {
+            background: rgb(2, 45, 7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .controls button:hover {
+            background: rgb(10, 52, 4);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Color Voice Assistant</h1>
+        <div class="mode-toggle">
+            <button id="learnMode" class="mode-button active">Learn Mode</button>
+            <button id="quizMode" class="mode-button">Quiz Mode</button>
+        </div>
+        <div id="colorBox" class="color-box"></div>
+        <div id="colorName" class="color-name">Red</div>
+        <div class="quiz-message" id="quizMessage"></div>
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="speakBtn">Speak</button>
+            <button id="listenBtn">Listen</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const colors = [
+            { name: 'Red', hex: '#FF0000' },
+            { name: 'Blue', hex: '#0000FF' },
+            { name: 'Green', hex: '#008000' },
+            { name: 'Yellow', hex: '#FFFF00' },
+            { name: 'Orange', hex: '#FFA500' },
+            { name: 'Purple', hex: '#800080' },
+            { name: 'Pink', hex: '#FFC0CB' },
+            { name: 'Brown', hex: '#A52A2A' },
+            { name: 'Black', hex: '#000000' },
+            { name: 'White', hex: '#FFFFFF' }
+        ];
+        let currentIndex = 0;
+        let isQuizMode = false;
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        function updateDisplay() {
+            document.getElementById('colorBox').style.backgroundColor = colors[currentIndex].hex;
+            document.getElementById('colorName').textContent = isQuizMode ? "???" : colors[currentIndex].name;
+            document.getElementById('quizMessage').textContent = isQuizMode ? "Say the color's name!" : "";
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', goToPrevious);
+        document.getElementById('nextBtn').addEventListener('click', goToNext);
+
+        function goToPrevious() {
+            currentIndex = (currentIndex - 1 + colors.length) % colors.length;
+            updateDisplay();
+            if (!isQuizMode) {
+                speak(`This color is ${colors[currentIndex].name}`);
+            }
+        }
+
+        function goToNext() {
+            currentIndex = (currentIndex + 1) % colors.length;
+            updateDisplay();
+            if (!isQuizMode) {
+                speak(`This color is ${colors[currentIndex].name}`);
+            }
+        }
+
+        document.getElementById('speakBtn').addEventListener('click', () => {
+            if (!isQuizMode) {
+                speak(`This color is ${colors[currentIndex].name}`);
+            }
+        });
+
+        document.getElementById('listenBtn').addEventListener('click', () => {
+            recognition.start();
+        });
+
+        recognition.onresult = (event) => {
+            let command = event.results[0][0].transcript.toLowerCase();
+            if (command.includes("next")) {
+                goToNext();
+            } else if (command.includes("previous")) {
+                goToPrevious();
+            } else if (isQuizMode) {
+                if (command.includes(colors[currentIndex].name.toLowerCase())) {
+                    document.getElementById('quizMessage').textContent = "🎉 Correct!";
+                    speak(`Correct! This is ${colors[currentIndex].name}`);
+                } else {
+                    document.getElementById('quizMessage').textContent = "❌ Try again! The correct answer is " + colors[currentIndex].name;
+                    speak(`Wrong answer! The correct answer is ${colors[currentIndex].name}`);
+                }
+            }
+        };
+
+        document.getElementById('learnMode').addEventListener('click', () => {
+            isQuizMode = false;
+            updateDisplay();
+            document.getElementById('learnMode').classList.add('active');
+            document.getElementById('quizMode').classList.remove('active');
+        });
+
+        document.getElementById('quizMode').addEventListener('click', () => {
+            isQuizMode = true;
+            updateDisplay();
+            document.getElementById('quizMode').classList.add('active');
+            document.getElementById('learnMode').classList.remove('active');
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>

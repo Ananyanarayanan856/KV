@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Learning Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background-image: url('images/g.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .bubble {
+            position: absolute;
+            background: rgba(5, 42, 5, 0.6);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 10s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh); }
+            100% { transform: translateY(-10vh); }
+        }
+        .main-container {
+             width: 90%;
+            max-width: 500px;
+            height: 600px; /* Set a fixed height */
+            background: rgba(215, 222, 214, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Ensures even spacing */
+        }
+
+        .vegetable-image {
+            width: 100%;
+            max-width: 300px;
+            height: 250px; /* Fixed height for images */
+            object-fit: contain; /* Ensures image fits without overflow */
+            border-radius: 15px;
+            margin: 10px auto;
+        }
+
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-button {
+            background: white;
+            color: rgb(10, 52, 4);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .mode-button.active {
+            background: rgb(2, 45, 7);
+            color: white;
+        }
+        /* .mode-button {
+            background: white;
+            color: #0b5014;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .mode-button.active {
+            background: #0b5014;
+            color: white; */
+        /* } */
+        /* .vegetable-image { */
+            /* width: 100%; */
+            /* max-width: 300px; */
+            /* border-radius: 15px; */
+            /* margin: 10px 0; */
+        /* } */
+        .vegetable-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0b0b0a;
+        }
+        .quiz-message {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .controls button {
+            background: #0b5014;
+            color: rgb(207, 218, 207);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .controls button:hover {
+            background: rgb(10, 52, 4);
+        }
+    </style>
+</head>
+<body>
+    <script>
+        for (let i = 0; i < 15; i++) {
+            let bubble = document.createElement('div');
+            let size = Math.random() * 100 + 50;
+            bubble.classList.add('bubble');
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${Math.random() * 100}vw`;
+            bubble.style.animationDuration = `${Math.random() * 10 + 5}s`;
+            document.body.appendChild(bubble);
+        }
+    </script>
+    <div class="main-container">
+        <h1>Vegetable Voice Assistant</h1>
+        <div class="mode-toggle">
+            <button id="learnMode" class="mode-button active">Learn Mode</button>
+            <button id="quizMode" class="mode-button">Quiz Mode</button>
+        </div>
+        <img id="vegetableImage" class="vegetable-image" src="images/carrot.jpg" alt="Vegetable Image">
+        <div id="vegetableName" class="vegetable-name">Carrot</div>
+        <div class="quiz-message" id="quizMessage"></div>
+        <div class="controls">
+            <button id="prevBtn">Previous</button>
+            <button id="speakBtn">Speak</button>
+            <button id="listenBtn">Listen</button>
+            <button id="nextBtn">Next</button>
+        </div>
+    </div>
+    <script>
+        const vegetables = [
+            { name: 'Carrot', image: 'images/carrot.jpg' },
+            { name: 'Potato', image: 'images/potat.jpg' },
+            { name: 'Tomato', image: 'images/tomato.jpg' },
+            { name: 'Onion', image: 'images/onion.jpg' },
+            { name: 'corn', image: 'images/corn.jpg' },
+            { name: 'Cabbage', image: 'images/cabbage.jpg' },
+            { name: 'Cauliflower', image: 'images/cauli.jpg' },
+            { name: 'peas', image: 'images/peas.avif' },
+            { name: 'Brinjal', image: 'images/brinjal.jpg' },
+            { name: 'Pumpkin', image: 'images/pumpkin.jpg' }
+        ];
+        let currentIndex = 0;
+        let isQuizMode = false;
+
+        function updateDisplay() {
+            document.getElementById('vegetableImage').src = vegetables[currentIndex].image;
+            document.getElementById('vegetableName').textContent = isQuizMode ? "???" : vegetables[currentIndex].name;
+            document.getElementById('quizMessage').textContent = isQuizMode ? "Say the vegetable's name!" : "";
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', goToPrevious);
+        document.getElementById('nextBtn').addEventListener('click', goToNext);
+
+        function goToPrevious() {
+            currentIndex = (currentIndex - 1 + vegetables.length) % vegetables.length;
+            updateDisplay();
+            if (!isQuizMode) {
+                speak(`This vegetable is ${vegetables[currentIndex].name}`);
+            }
+        }
+
+        function goToNext() {
+            currentIndex = (currentIndex + 1) % vegetables.length;
+            updateDisplay();
+            if (!isQuizMode) {
+                speak(`This vegetable is ${vegetables[currentIndex].name}`);
+            }
+        }
+
+        document.getElementById('speakBtn').addEventListener('click', () => {
+            if (!isQuizMode) {
+                speak(`This vegetable is ${vegetables[currentIndex].name}`);
+            }
+        });
+
+        document.getElementById('listenBtn').addEventListener('click', () => {
+            recognition.start();
+        });
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = (event) => {
+            let command = event.results[0][0].transcript.toLowerCase();
+            if (command.includes("next")) {
+                goToNext();
+            } else if (command.includes("previous")) {
+                goToPrevious();
+            } else if (isQuizMode) {
+                if (command.includes(vegetables[currentIndex].name.toLowerCase())) {
+                    document.getElementById('quizMessage').textContent = "🎉 Correct!";
+                    speak(`Correct! This is ${vegetables[currentIndex].name}`);
+                } else {
+                    document.getElementById('quizMessage').textContent = "❌ Try again!";
+                    speak(`Wrong answer! The correct answer is ${vegetables[currentIndex].name}`);
+                }
+            }
+        };
+
+        document.getElementById('learnMode').addEventListener('click', () => {
+            isQuizMode = false;
+            updateDisplay();
+        });
+
+        document.getElementById('quizMode').addEventListener('click', () => {
+            isQuizMode = true;
+            updateDisplay();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
